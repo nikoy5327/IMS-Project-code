@@ -1,6 +1,0 @@
-DB_HOST=localhost
-DB_NAME=carols_ims
-DB_USER=ims_user
-DB_PASS=password123
-FLASK_ENV=development
-FLASK_PORT=5000

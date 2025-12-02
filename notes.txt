@@ -1,0 +1,17 @@
+//1To set up your virtual environment:
+python -m venv .venv
+
+//To allow powershell to run scripts:
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+
+//2To run .venv without changing the execution poilicy
+Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process
+& .\.venv\Scripts\Activate.ps1
+
+//To run virtual environment venv
+.\.venv\Scripts\Activate.ps1
+
+//3after running venv, import libraries
+pip install -r requirements.txt
+
+//

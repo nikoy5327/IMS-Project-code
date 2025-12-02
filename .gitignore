@@ -1,2 +1,6 @@
 Diagnose.py
 diagnose/
+.venv/
+_pycache_/
+*.pyc
+.vscode/

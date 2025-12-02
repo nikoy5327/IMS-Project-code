@@ -1,0 +1,6 @@
+Food
+Beverages
+Toiletries
+Household Items
+Cleaning Supplies
+Miscellaneous

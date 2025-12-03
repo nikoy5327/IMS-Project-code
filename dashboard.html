@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Carol's Inventory Management System Dashboard</title>
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .content {
+        padding: 60px;
+        text-align: center;
+    }
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 30px;
+        margin-bottom: 60px;
+        margin-top: 40px;
+    }
+    .card {
+        background: #a682e0;
+        padding: 20px;
+        border-radius: 20px;
+        box-shadow: 0 2px 8px rgba(255, 255, 255, 0.918);
+        text-align: center;
+    }
+    #product-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+    #product-table th, #product-table td {
+        border: 1px solid #ccc;
+        padding: 10px;
+        text-align: left;
+    }
+    #product-table th {
+        background: #a682e0;
+    }
+    .chart-container {
+        margin-top: 40px;
+        width: 100%;
+        max-width: 700px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="sidebar"></div>
+  <div id="topbar"></div>
+
+  <div class="content">
+      <h2> Carol's Inventory Management System Dashboard</h2>
+
+      <!-- SUMMARY CARDS -->
+      <div class="grid">
+          <div class="card">
+              <h3>Total Products</h3>
+              <p id="total-products">0</p>
+          </div>
+
+          <div class="card">
+              <h3>Low Stock Items</h3>
+              <p id="low-stock">0</p>
+          </div>
+
+          <div class="card">
+              <h3>Total Categories</h3>
+              <p id="total-categories">0</p>
+          </div>
+      </div>
+
+      <!-- PRODUCT TABLE -->
+      <div id="product-table-container">
+          <h3>Recently Added Products</h3>
+          <table id="product-table">
+              <thead>
+                  <tr>
+                      <th>Product ID</th>
+                      <th>Name</th>
+                      <th>Price</th>
+                      <th>Quantity</th>
+                      <th>Category</th>
+                  </tr>
+              </thead>
+              <tbody>
+                  <!-- JS will populate rows -->
+              </tbody>
+          </table>
+      </div>
+
+      <!-- CHARTS SIDE BY SIDE -->
+<div class="chart-container" style="display: flex; gap: 100px; flex-wrap: wrap;">
+    <div style="flex: 1 1 300px;">
+        <h3>Products by Category</h3>
+        <canvas id="categoryChart"></canvas>
+    </div>
+    <div style="flex: 1 1 300px;">
+        <h3>Low Stock Items</h3>
+        <canvas id="lowStockChart"></canvas>
+    </div>
+</div>
+
+
+  </div>
+
+  <script src="js/ui.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/dashboard.js"></script>
+
+</body>
+</html>
+

@@ -1,4 +1,6 @@
-flask
-flask-cors
-python-dotenv
-psycopg2-binary
+Flask
+SQLAlchemy
+psycopg2
+bcrypt
+PyJWT
+fpdf

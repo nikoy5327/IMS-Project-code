@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Inventory</title>
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+</head>
+
+<body>
+
+  <div id="sidebar"></div>
+  <div id="topbar"></div>
+
+  <div class="content">
+
+     <div class="header-row">
+    <h2>Inventory</h2>
+
+    <div class="button-group">
+        <button id="add-product-btn" class="btn">+ Add Product</button>
+        <button id="edit-product-btn" class="btn-secondary">Edit Product</button>
+        <button id="remove-product-btn" class="btn-danger">Remove Product</button>
+
+    </div>
+</div>
+
+
+    <table class="table">
+    <thead>
+        <tr>
+            <th>Product ID</th>
+            <th>Product Name</th>
+            <th>Price</th>
+            <th>Quantity</th>
+            <th>Category</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody id="product-table"></tbody>
+</table>
+
+  </div>
+
+  <div id="modal" class="modal hidden">
+    <div class="modal-content">
+        <h3 id="modal-title"></h3>
+
+        <div id="modal-body"></div>
+
+        <div class="modal-actions">
+            <button class="btn" onclick="closeModal()">Cancel</button>
+            <button id="modal-save-btn" class="btn-primary">Save</button>
+        </div>
+    </div>
+</div>
+
+
+  <script src="js/ui.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/inventory.js"></script>
+
+</body>
+</html>

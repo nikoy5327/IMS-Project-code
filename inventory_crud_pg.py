@@ -3,9 +3,8 @@ from psycopg2.extras import RealDictCursor
 
 class InventoryCRUD:
     def __init__(self, host, database, user, password):
-        # Store database connection parameters
         self.config = {
-            "host": host,           # Use parameters, not hardcoded values
+            "host": host,
             "database": database,
             "user": user,
             "password": password
@@ -15,56 +14,82 @@ class InventoryCRUD:
         """Create and return a new database connection"""
         return psycopg2.connect(**self.config)
 
-    # ---------------------- READ OPERATIONS ----------------------
-    def get_product(self, product_id):
-        """Get a single product by ID"""
+    def list_products(self, search_term="", limit=100):
+        """Get list of products with optional search"""
         conn = self.connect()
         cursor = conn.cursor(cursor_factory=RealDictCursor)
         
         try:
-            cursor.execute("SELECT * FROM products WHERE id = %s", (product_id,))
-            return cursor.fetchone()
-        finally:
-            cursor.close()
-            conn.close()
-
-    def list_products(self, search_query=None, limit=100):
-        """List products, optionally filtered by search"""
-        conn = self.connect()
-        cursor = conn.cursor(cursor_factory=RealDictCursor)
-        
-        try:
-            if search_query:
-                cursor.execute("""
-                    SELECT id, product_code, name, current_quantity, price, archived
-                    FROM products
-                    WHERE archived = FALSE AND name ILIKE %s
-                    ORDER BY name
+            if search_term:
+                sql = """
+                    SELECT 
+                        id, product_code, name, category_id, 
+                        price, current_quantity as quantity, 
+                        reorder_threshold, archived,
+                        created_by, last_updated_by,
+                        created_at, updated_at
+                    FROM products 
+                    WHERE name ILIKE %s 
+                    AND archived = FALSE 
+                    ORDER BY id 
                     LIMIT %s
-                """, (f"%{search_query}%", limit))
+                """
+                cursor.execute(sql, (f"%{search_term}%", limit))
             else:
-                cursor.execute("""
-                    SELECT id, product_code, name, current_quantity, price, archived
-                    FROM products
-                    WHERE archived = FALSE
-                    ORDER BY name
+                sql = """
+                    SELECT 
+                        id, product_code, name, category_id, 
+                        price, current_quantity as quantity, 
+                        reorder_threshold, archived,
+                        created_by, last_updated_by,
+                        created_at, updated_at
+                    FROM products 
+                    WHERE archived = FALSE 
+                    ORDER BY id 
                     LIMIT %s
-                """, (limit,))
+                """
+                cursor.execute(sql, (limit,))
             
-            return cursor.fetchall()
+            rows = cursor.fetchall()
+            return rows
+            
         finally:
             cursor.close()
             conn.close()
 
-    # ---------------------- ADD PRODUCT ----------------------
-    def add_product(self, name, quantity, price,
+    def get_product(self, product_id):
+        conn = self.connect()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        
+        try:
+            sql = """
+                SELECT 
+                    id, product_code, name, category_id, 
+                    price, current_quantity as quantity, 
+                    reorder_threshold, archived,
+                    created_by, last_updated_by,
+                    created_at, updated_at
+                FROM products 
+                WHERE id = %s 
+                AND archived = FALSE
+            """
+            cursor.execute(sql, (product_id,))
+            product = cursor.fetchone()
+            return product
+            
+        finally:
+            cursor.close()
+            conn.close()
+
+    def add_product(self, name, current_quantity, price,
                     category_id=None, product_code=None,
-                    reorder_threshold=None, user_id=None):
+                    reorder_threshold=None, created_by=None):
         """Create a new product in the database"""
+        
         # Input validation
         if not name or name.strip() == "":
             raise ValueError("Product name is required.")
-        if quantity < 0:
+        if current_quantity < 0:
             raise ValueError("Quantity cannot be negative.")
 
         conn = self.connect()
@@ -89,8 +114,8 @@ class InventoryCRUD:
             """
 
             cursor.execute(sql, (
-                product_code, name, category_id, price, quantity,
-                reorder_threshold, user_id, user_id
+                product_code, name, category_id, price, current_quantity,
+                reorder_threshold, created_by, created_by
             ))
 
             new_id = cursor.fetchone()["id"]
@@ -101,12 +126,12 @@ class InventoryCRUD:
             cursor.close()
             conn.close()
 
-    # ---------------------- UPDATE PRODUCT ----------------------
     def update_product(self, product_id,
-                       name=None, quantity=None, price=None,
+                       name=None, current_quantity=None, price=None,
                        category_id=None, reorder_threshold=None,
-                       user_id=None):
+                       last_updated_by=None):
         """Update existing product - only provided fields are updated"""
+        
         if not product_id:
             raise ValueError("Product ID is required.")
 
@@ -128,25 +153,31 @@ class InventoryCRUD:
             if name is not None:
                 updates.append("name = %s")
                 params.append(name)
-            if quantity is not None:
+
+            if current_quantity is not None:
                 updates.append("current_quantity = %s")
-                params.append(quantity)
+                params.append(current_quantity)
+
             if price is not None:
                 updates.append("price = %s")
                 params.append(price)
+
             if category_id is not None:
                 updates.append("category_id = %s")
                 params.append(category_id)
+
             if reorder_threshold is not None:
                 updates.append("reorder_threshold = %s")
                 params.append(reorder_threshold)
 
+            # If no fields to update, return early
             if not updates:
                 return False
 
-            # Add audit fields
+            # Add audit field
             updates.append("last_updated_by = %s")
-            params.append(user_id)
+            params.append(last_updated_by)
+
             params.append(product_id)  # WHERE clause parameter
 
             # Build dynamic UPDATE query
@@ -158,15 +189,15 @@ class InventoryCRUD:
 
             cursor.execute(sql, params)
             conn.commit()
-            return cursor.rowcount > 0
+            return True
 
         finally:
             cursor.close()
             conn.close()
 
-    # ---------------------- DELETE PRODUCT ----------------------
-    def delete_product(self, product_id, user_id=None, permanent=False):
+    def delete_product(self, product_id, last_updated_by=None, permanent=False):
         """Delete a product - soft delete (archive) by default"""
+        
         if not product_id:
             raise ValueError("Product ID is required.")
 
@@ -175,21 +206,22 @@ class InventoryCRUD:
 
         try:
             if permanent:
+                # Hard delete
                 cursor.execute("DELETE FROM products WHERE id = %s", (product_id,))
             else:
-                cursor.execute(
-                    """
+                # Soft delete (archive)
+                sql = """
                     UPDATE products
                     SET archived = TRUE,
                         last_updated_by = %s,
                         updated_at = CURRENT_TIMESTAMP
                     WHERE id = %s
-                    """,
-                    (user_id, product_id)
-                )
+                """
+                cursor.execute(sql, (last_updated_by, product_id))
 
             conn.commit()
-            return cursor.rowcount > 0
+            return True
+
         finally:
             cursor.close()
             conn.close()
